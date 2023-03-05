@@ -46,6 +46,10 @@ function serverLive() {
     }
 }
 
+app.get('/status', async function (req, res) {
+    res.end('ok')
+})
+
 app.get('/', async function (req, res) {
     res.end('ok')
 })
