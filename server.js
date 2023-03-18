@@ -53,30 +53,30 @@ function changeServer() {
                         }
                     } catch (e) {}
 
-                    
                     request({
-                        url: 'https://backboard.railway.app/graphql?q=deployments',
+                        url: 'https://backboard.railway.app/graphql/internal?q=deployments',
                         method: 'POST',
                         headers: {
                             'content-type': 'application/json',
                             'cookie': 'rw.session='+mData['session']
                         },
-                        body: '{"query":"query deployments($projectId: ID!, $environmentId: ID, $serviceId: ID, $first: Int, $after: ID) {\\n  deployments(\\n    where: {projectId: $projectId, environmentId: $environmentId, serviceId: $serviceId}\\n    first: $first\\n    after: $after\\n  ) {\\n    totalCount\\n    nodes {\\n      ...ProjectDeploymentFields\\n    }\\n    pageInfo {\\n      hasNextPage\\n      endCursor\\n    }\\n  }\\n}\\n\\nfragment ProjectDeploymentFields on Deployment {\\n  id\\n  status\\n  createdAt\\n  projectId\\n  serviceId\\n  url\\n  staticUrl\\n  canRollback\\n  meta\\n  environmentId\\n  suggestAddServiceDomain\\n}","variables":{"projectId":"'+mData['projectId']+'","environmentId":"'+mData['environmentId']+'","serviceId":"'+mData['serviceId']+'","first":10},"operationName":"deployments"}'
+                        body: '{"query":"query deployments($first: Int, $after: String, $input: DeploymentListInput!) {\\n  deployments(input: $input, first: $first, after: $after) {\\n    edges {\\n      node {\\n        ...DeploymentFields\\n      }\\n    }\\n    pageInfo {\\n      hasNextPage\\n      endCursor\\n    }\\n  }\\n}\\n\\nfragment DeploymentFields on Deployment {\\n  id\\n  status\\n  createdAt\\n  projectId\\n  serviceId\\n  url\\n  staticUrl\\n  canRollback\\n  meta\\n  environmentId\\n  suggestAddServiceDomain\\n}","variables":{"input":{"projectId":"'+mData['projectId']+'","environmentId":"'+mData['environmentId']+'","serviceId":"'+mData['serviceId']+'"},"first":10},"operationName":"deployments"}'
                     }, function (error, response, body) {
                         let ID = null
-                        let ID2 = null 
+                        let ID2 = null
                         try {
                             if(!error && body) {
-                                let nodes = JSON.parse(body)['data']['deployments']['nodes']
-        
+                                let nodes = JSON.parse(body)['data']['deployments']['edges']
+                
                                 for (let i = 0; i < nodes.length; i++) {
-                                    if (nodes[i]['status'] == 'SUCCESS') {
+                                    let node = nodes[i]['node']
+                                    if (node['status'] == 'SUCCESS') {
                                         if (ID == null) {
-                                            ID = nodes[i]['id']
+                                            ID = node['id']
                                         }
                                         mServer = true
-                                    } else if (nodes[i]['status'] == 'REMOVED' && ID2 == null) {
-                                        ID2 = nodes[i]['id']
+                                    } else if (node['status'] == 'REMOVED' && ID2 == null) {
+                                        ID2 = node['id']
                                     }
                                 }
                             }
@@ -194,4 +194,3 @@ app.get('/status', async function (req, res) {
 app.get('/', async function (req, res) {
     res.end(mList.length+' '+startTime)
 })
-
