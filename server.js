@@ -9,6 +9,8 @@ app.listen(process.env.PORT || 3000, ()=>{
     console.log("Listening on port 3000...")
 })
 
+let startTime = new Date().toUTCString()
+
 let UPDATE = ''
 let START = false
 let STOP = false
@@ -190,6 +192,6 @@ app.get('/status', async function (req, res) {
 })
 
 app.get('/', async function (req, res) {
-    res.end(''+mList.length)
+    res.end(mList.length+' '+startTime)
 })
 
